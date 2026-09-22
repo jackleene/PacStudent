@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 125d36b377e3646499afe2743060db25
+guid: 9ebf15c4bdc9a2549b64b3e48de00e69
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -689004955854632102
-    second: 7_TJunction_0
+      213: 9134406944772604763
+    second: 7_TJunction 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 7_TJunction_0
+      name: 7_TJunction 1_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a5b0dc5a4a92076f0800000000000000
-      internalID: -689004955854632102
+      spriteID: b53480958bee3ce70800000000000000
+      internalID: 9134406944772604763
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      7_TJunction_0: -689004955854632102
+      7_TJunction 1_0: 9134406944772604763
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
