@@ -48480,6 +48480,7 @@ GameObject:
   - component: {fileID: 1576198047}
   - component: {fileID: 1576198046}
   - component: {fileID: 1576198045}
+  - component: {fileID: 1576198048}
   m_Layer: 0
   m_Name: PacStudent
   m_TagString: Untagged
@@ -48680,6 +48681,20 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1576198048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576198042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335c83e56c2a677459fd63cbec36305e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PacStudentController
+  levelGenerator: {fileID: 453025478}
+  speed: 5
 --- !u!1 &1576290216
 GameObject:
   m_ObjectHideFlags: 0

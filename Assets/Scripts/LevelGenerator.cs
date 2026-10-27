@@ -43,6 +43,26 @@ public class LevelGenerator : MonoBehaviour
         {0,0,0,0,0,0,5,0,0,0,4,0,0,0}
     };
 
+    // Grid coordinates match world X/Y: rows below the origin have negative Y.
+    public bool IsWalkable(Vector2Int cell)
+    {
+        int width = levelMap.GetLength(1);
+        int height = levelMap.GetLength(0);
+        int fullWidth = width * 2;
+        int fullHeight = height * 2 - 1;
+        int row = -cell.y;
+
+        if (cell.x < 0 || cell.x >= fullWidth || row < 0 || row >= fullHeight)
+        {
+            return false;
+        }
+
+        // Use the same mirroring as GenerateLevel, including its shared middle row.
+        int column = cell.x < width ? cell.x : fullWidth - 1 - cell.x;
+        row = row < height ? row : fullHeight - 1 - row;
+        return IsOpen(levelMap[row, column]);
+    }
+
     private void Start()
     {
         if (manualLevel != null)
