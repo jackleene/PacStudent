@@ -7,11 +7,17 @@ public class HUDController : MonoBehaviour
     [SerializeField] private Button exitButton;
     [SerializeField] private string startScene = "StartScene";
     [SerializeField] private Text gameTimer;
+    [SerializeField] private Text scoreText;
     [SerializeField] private GameObject countdownOverlay;
     [SerializeField] private Text countdownText;
 
     private bool isExiting;
     private long displayedHundredths = -1;
+
+    public void SetScore(int score)
+    {
+        scoreText.text = $"Score: {score:000000}";
+    }
 
     public void ShowCountdown(string text)
     {

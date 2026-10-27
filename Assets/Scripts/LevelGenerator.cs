@@ -26,6 +26,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private float ghostExitWallOffset;
 
     private readonly Dictionary<Vector2Int, GameObject> pellets = new Dictionary<Vector2Int, GameObject>();
+    private readonly Dictionary<Vector2Int, Collider2D> walls = new Dictionary<Vector2Int, Collider2D>();
 
     public Bounds LevelBounds
     {
@@ -41,6 +42,23 @@ public class LevelGenerator : MonoBehaviour
     public bool HasPellet(Vector2Int cell)
     {
         return pellets.TryGetValue(cell, out GameObject pellet) && pellet != null && pellet.activeInHierarchy;
+    }
+
+    public Collider2D GetWall(Vector2Int cell)
+    {
+        walls.TryGetValue(cell, out Collider2D wall);
+        return wall;
+    }
+
+    public bool TryGetTunnelExit(Vector2Int cell, Vector2Int direction, out Vector2Int exit)
+    {
+        exit = cell;
+        int lastColumn = levelMap.GetLength(1) * 2 - 1;
+        if (cell.y != -(levelMap.GetLength(0) - 1)) return false;
+        if (cell.x == 0 && direction == Vector2Int.left) exit.x = lastColumn;
+        else if (cell.x == lastColumn && direction == Vector2Int.right) exit.x = 0;
+        else return false;
+        return true;
     }
 
     private readonly int[,] levelMap =
@@ -177,6 +195,14 @@ public class LevelGenerator : MonoBehaviour
                 if (tile == 5 || tile == 6)
                 {
                     pellets[Vector2Int.RoundToInt(instance.transform.position)] = instance;
+                }
+                else if (IsAnyStructure(tile))
+                {
+                    // The collision grid is one unit per tile, independent of sprite art.
+                    var wall = instance.AddComponent<BoxCollider2D>();
+                    wall.size = Vector2.one;
+                    wall.isTrigger = true;
+                    walls[Vector2Int.RoundToInt(instance.transform.position)] = wall;
                 }
             }
         }
@@ -475,6 +501,7 @@ public class LevelGenerator : MonoBehaviour
     private void ClearGeneratedLevel()
     {
         pellets.Clear();
+        walls.Clear();
         for (int i = generatedLevel.childCount - 1; i >= 0; i--)
         {
             Destroy(generatedLevel.GetChild(i).gameObject);

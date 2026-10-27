@@ -9,6 +9,7 @@ public class RoundController : MonoBehaviour
 
     public bool IsPlaying { get; private set; }
     public double ElapsedSeconds { get; private set; }
+    public int Score { get; private set; }
 
     private Collider2D[] characterColliders;
     private bool[] colliderStates;
@@ -26,6 +27,7 @@ public class RoundController : MonoBehaviour
             characterColliders[i].enabled = false;
         }
         hud.SetGameTime(0d);
+        hud.SetScore(0);
         hud.ShowCountdown("3");
     }
 
@@ -55,5 +57,12 @@ public class RoundController : MonoBehaviour
         if (!IsPlaying) return;
         ElapsedSeconds = Time.timeAsDouble - playStartedAt;
         hud.SetGameTime(ElapsedSeconds);
+    }
+
+    public void AddScore(int points)
+    {
+        if (!IsPlaying || points <= 0) return;
+        Score += points;
+        hud.SetScore(Score);
     }
 }

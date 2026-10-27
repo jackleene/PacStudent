@@ -5,6 +5,7 @@ public class PacStudentController : MonoBehaviour
 {
     [SerializeField] private LevelGenerator levelGenerator;
     [SerializeField] private RoundController round;
+    [SerializeField] private PacStudentInteractions interactions;
     [SerializeField, Min(0.01f)] private float speed = 5f;
     [SerializeField] private Animator animator;
     [SerializeField] private AudioSource moveAudio;
@@ -86,13 +87,22 @@ public class PacStudentController : MonoBehaviour
             float step = Mathf.Min(remainingTime, duration - moveElapsed);
             moveElapsed += step;
             remainingTime -= step;
+            Vector3 previousPosition = transform.position;
             transform.position = Vector3.Lerp(moveStart, moveEnd, moveElapsed / duration);
+            if (interactions != null) interactions.CollectAlongPath(previousPosition, transform.position);
 
             if (moveElapsed >= duration)
             {
                 transform.position = moveEnd;
                 currentCell = targetCell;
                 isLerping = false;
+                if (levelGenerator.TryGetTunnelExit(currentCell, GetDirection(currentInput), out Vector2Int exit))
+                {
+                    currentCell = exit;
+                    transform.position = new Vector3(exit.x, exit.y, transform.position.z);
+                    // Keep the input buffer and direction; it now points inward.
+                    // Never sweep the teleport jump through the middle of the map.
+                }
             }
 
             // Carry unused frame time into the next tile to keep the same speed
@@ -159,7 +169,8 @@ public class PacStudentController : MonoBehaviour
 
     private bool TryStartMove()
     {
-        Vector2Int direction = GetDirection(lastInput);
+        Vector2Int requestedDirection = GetDirection(lastInput);
+        Vector2Int direction = requestedDirection;
         if (direction != Vector2Int.zero && levelGenerator.IsWalkable(currentCell + direction))
         {
             currentInput = lastInput;
@@ -169,11 +180,15 @@ public class PacStudentController : MonoBehaviour
             direction = GetDirection(currentInput);
             if (direction == Vector2Int.zero || !levelGenerator.IsWalkable(currentCell + direction))
             {
+                Vector2Int blockedDirection = direction != Vector2Int.zero ? direction : requestedDirection;
+                if (interactions != null && blockedDirection != Vector2Int.zero)
+                    interactions.HitWall(levelGenerator.GetWall(currentCell + blockedDirection));
                 return false;
             }
         }
 
         targetCell = currentCell + direction;
+        if (interactions != null) interactions.ClearWallContact();
         moveStart = transform.position;
         moveEnd = new Vector3(targetCell.x, targetCell.y, moveStart.z);
         moveElapsed = 0f;
