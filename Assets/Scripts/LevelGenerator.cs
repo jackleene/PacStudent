@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
@@ -24,6 +25,24 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private float tJunctionOffset;
     [SerializeField] private float ghostExitWallOffset;
 
+    private readonly Dictionary<Vector2Int, GameObject> pellets = new Dictionary<Vector2Int, GameObject>();
+
+    public Bounds LevelBounds
+    {
+        get
+        {
+            float width = levelMap.GetLength(1) * 2;
+            float height = levelMap.GetLength(0) * 2 - 1;
+            return new Bounds(new Vector3((width - 1f) * 0.5f, -(height - 1f) * 0.5f, 0f),
+                new Vector3(width, height, 1f));
+        }
+    }
+
+    public bool HasPellet(Vector2Int cell)
+    {
+        return pellets.TryGetValue(cell, out GameObject pellet) && pellet != null && pellet.activeInHierarchy;
+    }
+
     private readonly int[,] levelMap =
     {
         {1,2,2,2,2,2,2,2,2,2,2,2,2,7},
@@ -42,6 +61,26 @@ public class LevelGenerator : MonoBehaviour
         {2,2,2,2,2,1,5,3,3,0,4,0,0,0},
         {0,0,0,0,0,0,5,0,0,0,4,0,0,0}
     };
+
+    // Grid coordinates match world X/Y: rows below the origin have negative Y.
+    public bool IsWalkable(Vector2Int cell)
+    {
+        int width = levelMap.GetLength(1);
+        int height = levelMap.GetLength(0);
+        int fullWidth = width * 2;
+        int fullHeight = height * 2 - 1;
+        int row = -cell.y;
+
+        if (cell.x < 0 || cell.x >= fullWidth || row < 0 || row >= fullHeight)
+        {
+            return false;
+        }
+
+        // Use the same mirroring as GenerateLevel, including its shared middle row.
+        int column = cell.x < width ? cell.x : fullWidth - 1 - cell.x;
+        row = row < height ? row : fullHeight - 1 - row;
+        return IsOpen(levelMap[row, column]);
+    }
 
     private void Start()
     {
@@ -134,6 +173,11 @@ public class LevelGenerator : MonoBehaviour
                 instance.transform.localPosition = position;
                 instance.transform.localRotation = Quaternion.Euler(0f, 0f, rotation);
                 instance.transform.localScale = Vector3.one;
+
+                if (tile == 5 || tile == 6)
+                {
+                    pellets[Vector2Int.RoundToInt(instance.transform.position)] = instance;
+                }
             }
         }
     }
@@ -430,6 +474,7 @@ public class LevelGenerator : MonoBehaviour
 
     private void ClearGeneratedLevel()
     {
+        pellets.Clear();
         for (int i = generatedLevel.childCount - 1; i >= 0; i--)
         {
             Destroy(generatedLevel.GetChild(i).gameObject);
