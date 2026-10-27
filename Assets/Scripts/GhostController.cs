@@ -9,6 +9,7 @@ public class GhostController : MonoBehaviour
     [SerializeField, Range(1, 4)] private int ghostNumber = 1;
 
     private GhostStateController ghostState;
+    private GhostPatrolRoute patrolRoute;
     private PacStudentInteractions playerInteractions;
     private CircleCollider2D ghostCollider;
     private CircleCollider2D playerCollider;
@@ -28,6 +29,8 @@ public class GhostController : MonoBehaviour
     private bool isMoving;
     private bool leavingSpawn;
 
+    private float MoveSpeed => player.MoveSpeed * 0.9f * (ghostState.State == GhostState.Normal ? 1f : 0.5f);
+
     private void Awake()
     {
         ghostState = GetComponent<GhostStateController>();
@@ -37,6 +40,7 @@ public class GhostController : MonoBehaviour
         contactFilter = ContactFilter2D.noFilter;
         contactFilter.useTriggers = true;
         spawnExit = levelGenerator.GetGhostExit(ghostNumber);
+        if (ghostNumber == 4) patrolRoute = new GhostPatrolRoute(levelGenerator);
         ResetMovement();
     }
 
@@ -59,7 +63,7 @@ public class GhostController : MonoBehaviour
 
     private void Move(float deltaTime)
     {
-        float remainingDistance = player.MoveSpeed * 0.9f * deltaTime;
+        float remainingDistance = MoveSpeed * deltaTime;
         while (remainingDistance > 0f)
         {
             if (!isMoving && !TryStartMove()) return;
@@ -100,7 +104,7 @@ public class GhostController : MonoBehaviour
                 if (candidate == -direction) continue;
                 if (levelGenerator.IsGhostWalkable(currentCell + candidate, false)) choices[count++] = candidate;
             }
-            if (count > 0) nextDirection = choices[Random.Range(0, count)];
+            if (count > 0) nextDirection = ChooseDirection(count);
             else if (direction != Vector2Int.zero && levelGenerator.IsGhostWalkable(currentCell - direction, false))
                 nextDirection = -direction;
             else return false;
@@ -114,6 +118,28 @@ public class GhostController : MonoBehaviour
         isMoving = true;
         ghostState.FaceDirection(direction);
         return true;
+    }
+
+    private Vector2Int ChooseDirection(int count)
+    {
+        bool flee = ghostState.State == GhostState.Scared || ghostState.State == GhostState.Recovering
+            || ghostNumber == 1;
+        if (!flee && ghostNumber == 4) return patrolRoute.ChooseDirection(currentCell, direction, choices, count);
+        if (!flee && ghostNumber != 2) return choices[Random.Range(0, count)];
+
+        Vector2 playerPosition = player.transform.position;
+        float currentDistance = ((Vector2)currentCell - playerPosition).sqrMagnitude;
+        int preferredCount = 0;
+        for (int i = 0; i < count; i++)
+        {
+            float nextDistance = ((Vector2)(currentCell + choices[i]) - playerPosition).sqrMagnitude;
+            if (flee ? nextDistance >= currentDistance : nextDistance <= currentDistance)
+                choices[preferredCount++] = choices[i];
+        }
+
+        // Keep moving without backtracking if no legal direction meets the distance rule.
+        // With no preferred choices, the original candidate array is still intact.
+        return choices[Random.Range(0, preferredCount > 0 ? preferredCount : count)];
     }
 
     private void CheckPlayerContact(Vector3 from, Vector3 to)
