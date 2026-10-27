@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class PacStudentController : MonoBehaviour
 {
     [SerializeField] private LevelGenerator levelGenerator;
+    [SerializeField] private RoundController round;
     [SerializeField, Min(0.01f)] private float speed = 5f;
     [SerializeField] private Animator animator;
     [SerializeField] private AudioSource moveAudio;
@@ -45,6 +46,12 @@ public class PacStudentController : MonoBehaviour
 
     private void Update()
     {
+        if (round != null && !round.IsPlaying)
+        {
+            SetMovementFeedback(false);
+            return;
+        }
+
         ReadInput();
         Move(Time.deltaTime);
         SetMovementFeedback(isLerping);
