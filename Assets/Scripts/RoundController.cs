@@ -7,16 +7,20 @@ public class RoundController : MonoBehaviour
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private Transform characters;
     [SerializeField] private GhostStateController[] ghosts;
+    [SerializeField] private PacStudentController player;
 
     public bool IsPlaying { get; private set; }
     public double ElapsedSeconds { get; private set; }
     public int Score { get; private set; }
+    public int Lives { get; private set; } = 3;
+    public bool IsDying { get; private set; }
     public double GhostSecondsRemaining => System.Math.Max(0d, scaredUntil - Time.timeAsDouble);
 
     private Collider2D[] characterColliders;
     private bool[] colliderStates;
     private double playStartedAt;
     private double scaredUntil;
+    private bool roundStarted;
 
     private void Awake()
     {
@@ -32,6 +36,7 @@ public class RoundController : MonoBehaviour
         hud.SetGameTime(0d);
         hud.SetScore(0);
         hud.SetGhostTime(0d);
+        hud.SetLives(Lives);
         hud.ShowCountdown("3");
     }
 
@@ -53,15 +58,53 @@ public class RoundController : MonoBehaviour
             if (characterColliders[i] != null) characterColliders[i].enabled = colliderStates[i];
         }
         playStartedAt = Time.timeAsDouble;
+        roundStarted = true;
         IsPlaying = true;
     }
 
     private void Update()
     {
+        // Ordinary deaths remain part of the round time. The last life ends it.
+        if (roundStarted && Lives > 0)
+        {
+            ElapsedSeconds = Time.timeAsDouble - playStartedAt;
+            hud.SetGameTime(ElapsedSeconds);
+        }
         if (!IsPlaying) return;
+        RefreshGhostStates();
+    }
+
+    public void KillPlayer()
+    {
+        if (!IsPlaying || Lives <= 0) return;
+        IsPlaying = false;
+        IsDying = true;
         ElapsedSeconds = Time.timeAsDouble - playStartedAt;
         hud.SetGameTime(ElapsedSeconds);
-        RefreshGhostStates();
+        Lives--;
+        hud.SetLives(Lives);
+        foreach (Collider2D characterCollider in characterColliders)
+            if (characterCollider != null) characterCollider.enabled = false;
+        audioManager.StopMusic();
+        player.BeginDeath();
+        StartCoroutine(RespawnAfterDeath());
+    }
+
+    private IEnumerator RespawnAfterDeath()
+    {
+        yield return new WaitForSeconds(player.DeathDuration);
+        IsDying = false;
+        if (Lives <= 0) yield break;
+
+        scaredUntil = 0d;
+        hud.SetGhostTime(0d);
+        player.Respawn();
+        foreach (GhostStateController ghost in ghosts) ghost.ResetToSpawn();
+        Physics2D.SyncTransforms();
+        for (int i = 0; i < characterColliders.Length; i++)
+            if (characterColliders[i] != null) characterColliders[i].enabled = colliderStates[i];
+        audioManager.PlayNormalMusic();
+        IsPlaying = true;
     }
 
     public void ActivatePowerPill()

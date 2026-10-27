@@ -9,12 +9,19 @@ public class HUDController : MonoBehaviour
     [SerializeField] private Text gameTimer;
     [SerializeField] private Text scoreText;
     [SerializeField] private Text ghostTimer;
+    [SerializeField] private GameObject[] lifeIcons;
     [SerializeField] private GameObject countdownOverlay;
     [SerializeField] private Text countdownText;
 
     private bool isExiting;
     private long displayedHundredths = -1;
     private int displayedGhostSeconds = -1;
+
+    public void SetLives(int lives)
+    {
+        for (int i = 0; i < lifeIcons.Length; i++)
+            lifeIcons[i].SetActive(i < lives);
+    }
 
     public void SetGhostTime(double seconds)
     {

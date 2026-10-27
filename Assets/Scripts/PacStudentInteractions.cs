@@ -35,13 +35,14 @@ public class PacStudentInteractions : MonoBehaviour
         float radius = playerCollider.radius * Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.y));
         Vector2 displacement = to - from;
         int count = Physics2D.CircleCast(from, radius, displacement.normalized, pickupFilter, pathHits, displacement.magnitude);
-        for (int i = 0; i < count; i++) Collect(pathHits[i].collider);
+        for (int i = 0; i < count; i++)
+            Collect(pathHits[i].collider, from + displacement.normalized * pathHits[i].distance);
         // Sweeps include every traversed tile even when a slow frame crosses several.
         count = Physics2D.OverlapCircle(to, radius, pickupFilter, overlapHits);
         for (int i = 0; i < count; i++) Collect(overlapHits[i]);
     }
 
-    private void Collect(Collider2D other)
+    private void Collect(Collider2D other, Vector2? contactPosition = null)
     {
         if (!CanInteract || other == null) return;
         if (other.TryGetComponent(out Collectible item))
@@ -51,9 +52,17 @@ public class PacStudentInteractions : MonoBehaviour
             if (item.IsPowerPill) round.ActivatePowerPill();
             if (sound != null) effectsAudio.PlayOneShot(sound);
         }
-        else if (other.TryGetComponent(out GhostStateController ghost) && round.TryEatGhost(ghost))
+        else if (other.TryGetComponent(out GhostStateController ghost))
         {
-            effectsAudio.PlayOneShot(eatGhostSound);
+            if (round.TryEatGhost(ghost)) effectsAudio.PlayOneShot(eatGhostSound);
+            else if (ghost.State == GhostState.Normal)
+            {
+                if (contactPosition.HasValue)
+                    transform.position = new Vector3(contactPosition.Value.x, contactPosition.Value.y, transform.position.z);
+                effectsAudio.Stop();
+                wallImpact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                round.KillPlayer();
+            }
         }
     }
 

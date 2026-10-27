@@ -12,6 +12,11 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private AudioClip moveClip;
     [SerializeField] private AudioClip pelletClip;
     [SerializeField] private ParticleSystem movementDust;
+    [SerializeField] private AnimationClip deathAnimation;
+    [SerializeField] private AudioSource deathAudio;
+    [SerializeField] private ParticleSystem deathParticles;
+
+    public float DeathDuration => deathAnimation.length;
 
     private Key lastInput = Key.None;
     private Key currentInput = Key.None;
@@ -22,6 +27,8 @@ public class PacStudentController : MonoBehaviour
     private float moveElapsed;
     private bool isLerping;
     private Key animationDirection = Key.D;
+    private Vector3 spawnPosition;
+    private bool isDead;
 
     private void Start()
     {
@@ -34,6 +41,7 @@ public class PacStudentController : MonoBehaviour
 
         currentCell = Vector2Int.RoundToInt(transform.position);
         transform.position = new Vector3(currentCell.x, currentCell.y, transform.position.z);
+        spawnPosition = transform.position;
 
         if (animator != null)
         {
@@ -47,6 +55,8 @@ public class PacStudentController : MonoBehaviour
 
     private void Update()
     {
+        // Movement feedback must not freeze or overwrite the death animation.
+        if (isDead) return;
         if (round != null && !round.IsPlaying)
         {
             SetMovementFeedback(false);
@@ -55,7 +65,44 @@ public class PacStudentController : MonoBehaviour
 
         ReadInput();
         Move(Time.deltaTime);
+        if (isDead) return;
         SetMovementFeedback(isLerping);
+    }
+
+    public void BeginDeath()
+    {
+        if (isDead) return;
+        isDead = true;
+        isLerping = false;
+        lastInput = currentInput = Key.None;
+        SetMovementFeedback(false);
+        movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        animator.speed = 1f;
+        animator.Play("PacStudent_Dead", 0, 0f);
+        animator.Update(0f);
+        deathParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        deathParticles.Play();
+        // Start both together and match the sound's duration to the animation.
+        deathAudio.pitch = deathAudio.clip.length / DeathDuration;
+        deathAudio.Play();
+    }
+
+    public void Respawn()
+    {
+        deathAudio.Stop();
+        deathParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        transform.position = spawnPosition;
+        currentCell = targetCell = Vector2Int.RoundToInt(spawnPosition);
+        moveStart = moveEnd = spawnPosition;
+        moveElapsed = 0f;
+        isLerping = false;
+        lastInput = currentInput = Key.None;
+        animationDirection = Key.D;
+        interactions.ClearWallContact();
+        animator.Play("PacStudent_Right", 0, 0f);
+        animator.Update(0f);
+        isDead = false;
+        SetMovementFeedback(false);
     }
 
     private void ReadInput()
@@ -90,6 +137,9 @@ public class PacStudentController : MonoBehaviour
             Vector3 previousPosition = transform.position;
             transform.position = Vector3.Lerp(moveStart, moveEnd, moveElapsed / duration);
             if (interactions != null) interactions.CollectAlongPath(previousPosition, transform.position);
+            // A swept contact can start death inside this segment. Do not finish
+            // the old lerp or consume the rest of a long frame after it.
+            if (isDead) return;
 
             if (moveElapsed >= duration)
             {

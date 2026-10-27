@@ -28,6 +28,11 @@ public class AudioManager : MonoBehaviour
         PlayMusic(deadMusic);
     }
 
+    public void StopMusic()
+    {
+        audioSource.Stop();
+    }
+
     private void PlayMusic(AudioClip clip)
     {
         if (audioSource.clip == clip && audioSource.isPlaying) return;

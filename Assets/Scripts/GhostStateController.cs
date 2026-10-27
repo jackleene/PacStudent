@@ -9,6 +9,7 @@ public class GhostStateController : MonoBehaviour
 
     public GhostState State { get; private set; }
     private double deadUntil;
+    private Vector3 spawnPosition;
 
     private static readonly int NormalAnimation = Animator.StringToHash("Ghost1_Right");
     private static readonly int ScaredAnimation = Animator.StringToHash("Ghost_Scared_Right");
@@ -17,6 +18,15 @@ public class GhostStateController : MonoBehaviour
 
     private void Awake()
     {
+        spawnPosition = transform.position;
+        State = GhostState.Normal;
+        animator.Play(NormalAnimation, 0, 0f);
+    }
+
+    public void ResetToSpawn()
+    {
+        transform.position = spawnPosition;
+        deadUntil = 0d;
         State = GhostState.Normal;
         animator.Play(NormalAnimation, 0, 0f);
     }
