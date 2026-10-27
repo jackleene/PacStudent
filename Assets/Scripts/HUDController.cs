@@ -50,6 +50,12 @@ public class HUDController : MonoBehaviour
         exitButton.interactable = !isExiting;
     }
 
+    public void ShowGameOver()
+    {
+        countdownText.fontSize = 80;
+        ShowCountdown("Game Over");
+    }
+
     public void SetGameTime(double seconds)
     {
         long hundredths = (long)(System.Math.Max(0d, seconds) * 100d);
@@ -69,6 +75,11 @@ public class HUDController : MonoBehaviour
     }
 
     private void ExitLevel()
+    {
+        if (exitButton.interactable) ReturnToStart();
+    }
+
+    public void ReturnToStart()
     {
         if (isExiting)
         {

@@ -87,6 +87,16 @@ public class PacStudentController : MonoBehaviour
         deathAudio.Play();
     }
 
+    public void StopMovement()
+    {
+        isLerping = false;
+        lastInput = currentInput = Key.None;
+        // The final-life death animation still finishes beneath the Game Over overlay.
+        if (isDead) return;
+        SetMovementFeedback(false);
+        movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
     public void Respawn()
     {
         deathAudio.Stop();
@@ -139,7 +149,7 @@ public class PacStudentController : MonoBehaviour
             if (interactions != null) interactions.CollectAlongPath(previousPosition, transform.position);
             // A swept contact can start death inside this segment. Do not finish
             // the old lerp or consume the rest of a long frame after it.
-            if (isDead) return;
+            if (isDead || (round != null && !round.IsPlaying)) return;
 
             if (moveElapsed >= duration)
             {

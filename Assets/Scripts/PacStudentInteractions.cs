@@ -51,6 +51,7 @@ public class PacStudentInteractions : MonoBehaviour
             round.AddScore(points);
             if (item.IsPowerPill) round.ActivatePowerPill();
             if (sound != null) effectsAudio.PlayOneShot(sound);
+            round.PelletCollected(item);
         }
         else if (other.TryGetComponent(out GhostStateController ghost))
         {

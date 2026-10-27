@@ -8,12 +8,14 @@ public class RoundController : MonoBehaviour
     [SerializeField] private Transform characters;
     [SerializeField] private GhostStateController[] ghosts;
     [SerializeField] private PacStudentController player;
+    [SerializeField] private LevelGenerator levelGenerator;
 
     public bool IsPlaying { get; private set; }
     public double ElapsedSeconds { get; private set; }
     public int Score { get; private set; }
     public int Lives { get; private set; } = 3;
     public bool IsDying { get; private set; }
+    public bool IsGameOver { get; private set; }
     public double GhostSecondsRemaining => System.Math.Max(0d, scaredUntil - Time.timeAsDouble);
 
     private Collider2D[] characterColliders;
@@ -64,8 +66,8 @@ public class RoundController : MonoBehaviour
 
     private void Update()
     {
-        // Ordinary deaths remain part of the round time. The last life ends it.
-        if (roundStarted && Lives > 0)
+        // Ordinary deaths remain part of the round time; Game Over freezes it.
+        if (roundStarted && !IsGameOver)
         {
             ElapsedSeconds = Time.timeAsDouble - playStartedAt;
             hud.SetGameTime(ElapsedSeconds);
@@ -88,13 +90,14 @@ public class RoundController : MonoBehaviour
         audioManager.StopMusic();
         player.BeginDeath();
         StartCoroutine(RespawnAfterDeath());
+        if (Lives == 0) EndRound();
     }
 
     private IEnumerator RespawnAfterDeath()
     {
         yield return new WaitForSeconds(player.DeathDuration);
         IsDying = false;
-        if (Lives <= 0) yield break;
+        if (IsGameOver) yield break;
 
         scaredUntil = 0d;
         hud.SetGhostTime(0d);
@@ -105,6 +108,36 @@ public class RoundController : MonoBehaviour
             if (characterColliders[i] != null) characterColliders[i].enabled = colliderStates[i];
         audioManager.PlayNormalMusic();
         IsPlaying = true;
+    }
+
+    public void PelletCollected(Collectible item)
+    {
+        if (!IsPlaying) return;
+        if (levelGenerator.RemoveCollectedPellet(item) && levelGenerator.RemainingPellets == 0)
+            EndRound();
+    }
+
+    private void EndRound()
+    {
+        if (IsGameOver) return;
+        IsGameOver = true;
+        IsPlaying = false;
+        ElapsedSeconds = Time.timeAsDouble - playStartedAt;
+        hud.SetGameTime(ElapsedSeconds);
+        foreach (Collider2D characterCollider in characterColliders)
+            if (characterCollider != null) characterCollider.enabled = false;
+        player.StopMovement();
+        audioManager.StopMusic();
+        hud.SetGhostTime(0d);
+        hud.ShowGameOver();
+        HighScoreRecord.SaveIfBetter(gameObject.scene.name, Score, ElapsedSeconds);
+        StartCoroutine(ReturnAfterGameOver());
+    }
+
+    private IEnumerator ReturnAfterGameOver()
+    {
+        yield return new WaitForSeconds(3f);
+        hud.ReturnToStart();
     }
 
     public void ActivatePowerPill()

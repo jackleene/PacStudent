@@ -55285,6 +55285,7 @@ MonoBehaviour:
   - {fileID: 2114987798}
   - {fileID: 952679706}
   player: {fileID: 1576198048}
+  levelGenerator: {fileID: 453025478}
 --- !u!1 &1634043848
 GameObject:
   m_ObjectHideFlags: 0

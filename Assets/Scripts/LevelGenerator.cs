@@ -28,6 +28,16 @@ public class LevelGenerator : MonoBehaviour
     private readonly Dictionary<Vector2Int, GameObject> pellets = new Dictionary<Vector2Int, GameObject>();
     private readonly Dictionary<Vector2Int, Collider2D> walls = new Dictionary<Vector2Int, Collider2D>();
 
+    public int RemainingPellets => pellets.Count;
+
+    public bool RemoveCollectedPellet(Collectible item)
+    {
+        Vector2Int cell = Vector2Int.RoundToInt(item.transform.position);
+        // Only generated map pellets count toward completion, never bonus cherries.
+        if (!pellets.TryGetValue(cell, out GameObject pellet) || pellet != item.gameObject) return false;
+        return pellets.Remove(cell);
+    }
+
     public Bounds LevelBounds
     {
         get
