@@ -5,6 +5,11 @@ public class PacStudentController : MonoBehaviour
 {
     [SerializeField] private LevelGenerator levelGenerator;
     [SerializeField, Min(0.01f)] private float speed = 5f;
+    [SerializeField] private Animator animator;
+    [SerializeField] private AudioSource moveAudio;
+    [SerializeField] private AudioClip moveClip;
+    [SerializeField] private AudioClip pelletClip;
+    [SerializeField] private ParticleSystem movementDust;
 
     private Key lastInput = Key.None;
     private Key currentInput = Key.None;
@@ -14,6 +19,7 @@ public class PacStudentController : MonoBehaviour
     private Vector3 moveEnd;
     private float moveElapsed;
     private bool isLerping;
+    private Key animationDirection = Key.D;
 
     private void Start()
     {
@@ -26,12 +32,22 @@ public class PacStudentController : MonoBehaviour
 
         currentCell = Vector2Int.RoundToInt(transform.position);
         transform.position = new Vector3(currentCell.x, currentCell.y, transform.position.z);
+
+        if (animator != null)
+        {
+            animator.enabled = true;
+            animator.Play("PacStudent_Right", 0, 0f);
+            animator.Update(0f);
+            animator.speed = 0f;
+        }
+        SetMovementFeedback(false);
     }
 
     private void Update()
     {
         ReadInput();
         Move(Time.deltaTime);
+        SetMovementFeedback(isLerping);
     }
 
     private void ReadInput()
@@ -75,6 +91,63 @@ public class PacStudentController : MonoBehaviour
             // Carry unused frame time into the next tile to keep the same speed
             // at different frame rates, without skipping any grid decisions.
         }
+
+        // Start the next segment at the boundary so feedback stays continuous
+        // while travelling along a corridor, even on exact-duration frames.
+        if (!isLerping && deltaTime > 0f)
+        {
+            TryStartMove();
+        }
+    }
+
+    private void SetMovementFeedback(bool moving)
+    {
+        if (animator != null)
+        {
+            if (moving && animationDirection != currentInput)
+            {
+                animationDirection = currentInput;
+                switch (currentInput)
+                {
+                    case Key.W: animator.Play("PacStudent_Up", 0, 0f); break;
+                    case Key.A: animator.Play("PacStudent_Left", 0, 0f); break;
+                    case Key.S: animator.Play("PacStudent_Down", 0, 0f); break;
+                    case Key.D: animator.Play("PacStudent_Right", 0, 0f); break;
+                }
+            }
+            animator.speed = moving ? 1f : 0f;
+        }
+
+        if (moveAudio != null)
+        {
+            if (moving)
+            {
+                AudioClip clip = levelGenerator.HasPellet(targetCell) ? pelletClip : moveClip;
+                if (moveAudio.clip != clip)
+                {
+                    moveAudio.Stop();
+                    moveAudio.clip = clip;
+                }
+                moveAudio.loop = true;
+                if (!moveAudio.isPlaying && clip != null) moveAudio.Play();
+            }
+            else if (moveAudio.isPlaying)
+            {
+                moveAudio.Stop();
+            }
+        }
+
+        if (movementDust != null)
+        {
+            if (moving && !movementDust.isPlaying) movementDust.Play();
+            else if (!moving && movementDust.isPlaying)
+                movementDust.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+    }
+
+    private void OnDisable()
+    {
+        SetMovementFeedback(false);
     }
 
     private bool TryStartMove()

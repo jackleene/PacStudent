@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
@@ -23,6 +24,24 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private float insideWallOffset;
     [SerializeField] private float tJunctionOffset;
     [SerializeField] private float ghostExitWallOffset;
+
+    private readonly Dictionary<Vector2Int, GameObject> pellets = new Dictionary<Vector2Int, GameObject>();
+
+    public Bounds LevelBounds
+    {
+        get
+        {
+            float width = levelMap.GetLength(1) * 2;
+            float height = levelMap.GetLength(0) * 2 - 1;
+            return new Bounds(new Vector3((width - 1f) * 0.5f, -(height - 1f) * 0.5f, 0f),
+                new Vector3(width, height, 1f));
+        }
+    }
+
+    public bool HasPellet(Vector2Int cell)
+    {
+        return pellets.TryGetValue(cell, out GameObject pellet) && pellet != null && pellet.activeInHierarchy;
+    }
 
     private readonly int[,] levelMap =
     {
@@ -154,6 +173,11 @@ public class LevelGenerator : MonoBehaviour
                 instance.transform.localPosition = position;
                 instance.transform.localRotation = Quaternion.Euler(0f, 0f, rotation);
                 instance.transform.localScale = Vector3.one;
+
+                if (tile == 5 || tile == 6)
+                {
+                    pellets[Vector2Int.RoundToInt(instance.transform.position)] = instance;
+                }
             }
         }
     }
@@ -450,6 +474,7 @@ public class LevelGenerator : MonoBehaviour
 
     private void ClearGeneratedLevel()
     {
+        pellets.Clear();
         for (int i = generatedLevel.childCount - 1; i >= 0; i--)
         {
             Destroy(generatedLevel.GetChild(i).gameObject);
