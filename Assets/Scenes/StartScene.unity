@@ -668,6 +668,10 @@ MonoBehaviour:
   levelTwoButton: {fileID: 563357609}
   levelOneScene: Level01
   levelTwoScene: InnovationScene
+  levelOneScore: {fileID: 588275768}
+  levelOneTime: {fileID: 352313860}
+  levelTwoScore: {fileID: 1421097911}
+  levelTwoTime: {fileID: 1649542599}
 --- !u!4 &310857262
 Transform:
   m_ObjectHideFlags: 0

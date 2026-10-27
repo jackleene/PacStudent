@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public class AudioManager : MonoBehaviour
@@ -6,29 +5,39 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip introMusic;
     [SerializeField] private AudioClip normalMusic;
+    [SerializeField] private AudioClip scaredMusic;
+    [SerializeField] private AudioClip deadMusic;
 
-    private void Start()
+    public void PlayIntroMusic()
     {
-        StartCoroutine(PlayIntroThenNormalMusic());
+        PlayMusic(introMusic);
     }
 
-    private IEnumerator PlayIntroThenNormalMusic()
+    public void PlayNormalMusic()
     {
-        audioSource.clip = introMusic;
-        audioSource.loop = false;
-        audioSource.Play();
+        PlayMusic(normalMusic);
+    }
 
-        float timer = 0f;
+    public void PlayScaredMusic()
+    {
+        PlayMusic(scaredMusic);
+    }
 
-        while (audioSource.isPlaying && timer < 3f)
-        {
-            timer += Time.deltaTime;
-            yield return null;
-        }
+    public void PlayDeadMusic()
+    {
+        PlayMusic(deadMusic);
+    }
 
+    public void StopMusic()
+    {
         audioSource.Stop();
+    }
 
-        audioSource.clip = normalMusic;
+    private void PlayMusic(AudioClip clip)
+    {
+        if (audioSource.clip == clip && audioSource.isPlaying) return;
+        audioSource.Stop();
+        audioSource.clip = clip;
         audioSource.loop = true;
         audioSource.Play();
     }

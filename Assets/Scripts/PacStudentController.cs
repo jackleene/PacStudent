@@ -4,12 +4,19 @@ using UnityEngine.InputSystem;
 public class PacStudentController : MonoBehaviour
 {
     [SerializeField] private LevelGenerator levelGenerator;
+    [SerializeField] private RoundController round;
+    [SerializeField] private PacStudentInteractions interactions;
     [SerializeField, Min(0.01f)] private float speed = 5f;
     [SerializeField] private Animator animator;
     [SerializeField] private AudioSource moveAudio;
     [SerializeField] private AudioClip moveClip;
     [SerializeField] private AudioClip pelletClip;
     [SerializeField] private ParticleSystem movementDust;
+    [SerializeField] private AnimationClip deathAnimation;
+    [SerializeField] private AudioSource deathAudio;
+    [SerializeField] private ParticleSystem deathParticles;
+
+    public float DeathDuration => deathAnimation.length;
 
     private Key lastInput = Key.None;
     private Key currentInput = Key.None;
@@ -20,6 +27,8 @@ public class PacStudentController : MonoBehaviour
     private float moveElapsed;
     private bool isLerping;
     private Key animationDirection = Key.D;
+    private Vector3 spawnPosition;
+    private bool isDead;
 
     private void Start()
     {
@@ -32,6 +41,7 @@ public class PacStudentController : MonoBehaviour
 
         currentCell = Vector2Int.RoundToInt(transform.position);
         transform.position = new Vector3(currentCell.x, currentCell.y, transform.position.z);
+        spawnPosition = transform.position;
 
         if (animator != null)
         {
@@ -45,9 +55,64 @@ public class PacStudentController : MonoBehaviour
 
     private void Update()
     {
+        // Movement feedback must not freeze or overwrite the death animation.
+        if (isDead) return;
+        if (round != null && !round.IsPlaying)
+        {
+            SetMovementFeedback(false);
+            return;
+        }
+
         ReadInput();
         Move(Time.deltaTime);
+        if (isDead) return;
         SetMovementFeedback(isLerping);
+    }
+
+    public void BeginDeath()
+    {
+        if (isDead) return;
+        isDead = true;
+        isLerping = false;
+        lastInput = currentInput = Key.None;
+        SetMovementFeedback(false);
+        movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        animator.speed = 1f;
+        animator.Play("PacStudent_Dead", 0, 0f);
+        animator.Update(0f);
+        deathParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        deathParticles.Play();
+        // Start both together and match the sound's duration to the animation.
+        deathAudio.pitch = deathAudio.clip.length / DeathDuration;
+        deathAudio.Play();
+    }
+
+    public void StopMovement()
+    {
+        isLerping = false;
+        lastInput = currentInput = Key.None;
+        // The final-life death animation still finishes beneath the Game Over overlay.
+        if (isDead) return;
+        SetMovementFeedback(false);
+        movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
+    public void Respawn()
+    {
+        deathAudio.Stop();
+        deathParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        transform.position = spawnPosition;
+        currentCell = targetCell = Vector2Int.RoundToInt(spawnPosition);
+        moveStart = moveEnd = spawnPosition;
+        moveElapsed = 0f;
+        isLerping = false;
+        lastInput = currentInput = Key.None;
+        animationDirection = Key.D;
+        interactions.ClearWallContact();
+        animator.Play("PacStudent_Right", 0, 0f);
+        animator.Update(0f);
+        isDead = false;
+        SetMovementFeedback(false);
     }
 
     private void ReadInput()
@@ -79,13 +144,25 @@ public class PacStudentController : MonoBehaviour
             float step = Mathf.Min(remainingTime, duration - moveElapsed);
             moveElapsed += step;
             remainingTime -= step;
+            Vector3 previousPosition = transform.position;
             transform.position = Vector3.Lerp(moveStart, moveEnd, moveElapsed / duration);
+            if (interactions != null) interactions.CollectAlongPath(previousPosition, transform.position);
+            // A swept contact can start death inside this segment. Do not finish
+            // the old lerp or consume the rest of a long frame after it.
+            if (isDead || (round != null && !round.IsPlaying)) return;
 
             if (moveElapsed >= duration)
             {
                 transform.position = moveEnd;
                 currentCell = targetCell;
                 isLerping = false;
+                if (levelGenerator.TryGetTunnelExit(currentCell, GetDirection(currentInput), out Vector2Int exit))
+                {
+                    currentCell = exit;
+                    transform.position = new Vector3(exit.x, exit.y, transform.position.z);
+                    // Keep the input buffer and direction; it now points inward.
+                    // Never sweep the teleport jump through the middle of the map.
+                }
             }
 
             // Carry unused frame time into the next tile to keep the same speed
@@ -152,7 +229,8 @@ public class PacStudentController : MonoBehaviour
 
     private bool TryStartMove()
     {
-        Vector2Int direction = GetDirection(lastInput);
+        Vector2Int requestedDirection = GetDirection(lastInput);
+        Vector2Int direction = requestedDirection;
         if (direction != Vector2Int.zero && levelGenerator.IsWalkable(currentCell + direction))
         {
             currentInput = lastInput;
@@ -162,11 +240,15 @@ public class PacStudentController : MonoBehaviour
             direction = GetDirection(currentInput);
             if (direction == Vector2Int.zero || !levelGenerator.IsWalkable(currentCell + direction))
             {
+                Vector2Int blockedDirection = direction != Vector2Int.zero ? direction : requestedDirection;
+                if (interactions != null && blockedDirection != Vector2Int.zero)
+                    interactions.HitWall(levelGenerator.GetWall(currentCell + blockedDirection));
                 return false;
             }
         }
 
         targetCell = currentCell + direction;
+        if (interactions != null) interactions.ClearWallContact();
         moveStart = transform.position;
         moveEnd = new Vector3(targetCell.x, targetCell.y, moveStart.z);
         moveElapsed = 0f;
