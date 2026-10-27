@@ -17,6 +17,7 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private ParticleSystem deathParticles;
 
     public float DeathDuration => deathAnimation.length;
+    public float MoveSpeed => speed;
 
     private Key lastInput = Key.None;
     private Key currentInput = Key.None;

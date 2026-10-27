@@ -34982,6 +34982,7 @@ GameObject:
   - component: {fileID: 945452236}
   - component: {fileID: 945452239}
   - component: {fileID: 945452238}
+  - component: {fileID: 3000000001}
   m_Layer: 0
   m_Name: Ghost1
   m_TagString: Untagged
@@ -35190,6 +35191,7 @@ GameObject:
   - component: {fileID: 952679704}
   - component: {fileID: 952679707}
   - component: {fileID: 952679706}
+  - component: {fileID: 3000000004}
   m_Layer: 0
   m_Name: Ghost4
   m_TagString: Untagged
@@ -59939,6 +59941,7 @@ GameObject:
   - component: {fileID: 1786206230}
   - component: {fileID: 1786206233}
   - component: {fileID: 1786206232}
+  - component: {fileID: 3000000002}
   m_Layer: 0
   m_Name: Ghost2
   m_TagString: Untagged
@@ -69181,6 +69184,7 @@ GameObject:
   - component: {fileID: 2114987796}
   - component: {fileID: 2114987799}
   - component: {fileID: 2114987798}
+  - component: {fileID: 3000000003}
   m_Layer: 0
   m_Name: Ghost3
   m_TagString: Untagged
@@ -80258,6 +80262,70 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &3000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945452234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3d21d03eef017419136ec82b81550b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostController
+  levelGenerator: {fileID: 453025478}
+  round: {fileID: 1629571911}
+  player: {fileID: 1576198048}
+  ghostNumber: 1
+--- !u!114 &3000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1786206228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3d21d03eef017419136ec82b81550b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostController
+  levelGenerator: {fileID: 453025478}
+  round: {fileID: 1629571911}
+  player: {fileID: 1576198048}
+  ghostNumber: 2
+--- !u!114 &3000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114987794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3d21d03eef017419136ec82b81550b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostController
+  levelGenerator: {fileID: 453025478}
+  round: {fileID: 1629571911}
+  player: {fileID: 1576198048}
+  ghostNumber: 3
+--- !u!114 &3000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952679702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3d21d03eef017419136ec82b81550b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostController
+  levelGenerator: {fileID: 453025478}
+  round: {fileID: 1629571911}
+  player: {fileID: 1576198048}
+  ghostNumber: 4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -93,6 +93,33 @@ public class LevelGenerator : MonoBehaviour
     // Grid coordinates match world X/Y: rows below the origin have negative Y.
     public bool IsWalkable(Vector2Int cell)
     {
+        return IsOpen(GetTile(cell));
+    }
+
+    public bool IsGhostWalkable(Vector2Int cell, bool leavingSpawn)
+    {
+        // The tunnel endpoints are walls for ghosts, never teleport destinations.
+        if (cell.y == -14 && (cell.x == 0 || cell.x == 27)) return false;
+        int tile = GetTile(cell);
+        if (tile == 8) return leavingSpawn;
+        if (!IsOpen(tile)) return false;
+        return leavingSpawn || !IsGhostSpawnArea(cell);
+    }
+
+    public bool IsGhostSpawnArea(Vector2Int cell)
+    {
+        // Interior and the two gate rows of this map's central ghost house.
+        return cell.x >= 11 && cell.x <= 16 && cell.y >= -16 && cell.y <= -12;
+    }
+
+    public Vector2Int GetGhostExit(int ghostNumber)
+    {
+        return new Vector2Int(ghostNumber <= 2 ? 13 : 14,
+            ghostNumber == 1 || ghostNumber == 3 ? -11 : -17);
+    }
+
+    private int GetTile(Vector2Int cell)
+    {
         int width = levelMap.GetLength(1);
         int height = levelMap.GetLength(0);
         int fullWidth = width * 2;
@@ -101,13 +128,13 @@ public class LevelGenerator : MonoBehaviour
 
         if (cell.x < 0 || cell.x >= fullWidth || row < 0 || row >= fullHeight)
         {
-            return false;
+            return -1;
         }
 
         // Use the same mirroring as GenerateLevel, including its shared middle row.
         int column = cell.x < width ? cell.x : fullWidth - 1 - cell.x;
         row = row < height ? row : fullHeight - 1 - row;
-        return IsOpen(levelMap[row, column]);
+        return levelMap[row, column];
     }
 
     private void Start()
