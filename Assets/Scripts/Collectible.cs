@@ -4,7 +4,10 @@ public class Collectible : MonoBehaviour
 {
     [SerializeField] private int points = 10;
     [SerializeField] private AudioClip pickupSound;
+    [SerializeField] private bool powerPill;
     private bool collected;
+
+    public bool IsPowerPill => powerPill;
 
     public bool TryCollect(out int awardedPoints, out AudioClip sound)
     {

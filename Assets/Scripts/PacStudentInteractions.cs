@@ -6,6 +6,7 @@ public class PacStudentInteractions : MonoBehaviour
     [SerializeField] private RoundController round;
     [SerializeField] private AudioSource effectsAudio;
     [SerializeField] private AudioClip wallHitSound;
+    [SerializeField] private AudioClip eatGhostSound;
     [SerializeField] private ParticleSystem wallImpact;
 
     private CircleCollider2D playerCollider;
@@ -42,10 +43,18 @@ public class PacStudentInteractions : MonoBehaviour
 
     private void Collect(Collider2D other)
     {
-        if (!CanInteract || other == null || !other.TryGetComponent(out Collectible item)) return;
-        if (!item.TryCollect(out int points, out AudioClip sound)) return;
-        round.AddScore(points);
-        if (sound != null) effectsAudio.PlayOneShot(sound);
+        if (!CanInteract || other == null) return;
+        if (other.TryGetComponent(out Collectible item))
+        {
+            if (!item.TryCollect(out int points, out AudioClip sound)) return;
+            round.AddScore(points);
+            if (item.IsPowerPill) round.ActivatePowerPill();
+            if (sound != null) effectsAudio.PlayOneShot(sound);
+        }
+        else if (other.TryGetComponent(out GhostStateController ghost) && round.TryEatGhost(ghost))
+        {
+            effectsAudio.PlayOneShot(eatGhostSound);
+        }
     }
 
     public void HitWall(Collider2D wall)

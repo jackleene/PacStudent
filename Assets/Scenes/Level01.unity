@@ -11140,6 +11140,8 @@ MonoBehaviour:
   audioSource: {fileID: 329173559}
   introMusic: {fileID: 8300000, guid: 53c0f2040f66f384fab6d077ad02daaa, type: 3}
   normalMusic: {fileID: 8300000, guid: 75969f3ef4573724387c6a1faf02d94d, type: 3}
+  scaredMusic: {fileID: 8300000, guid: 97c91dc76f08ca94ea47ce0b01635f11, type: 3}
+  deadMusic: {fileID: 8300000, guid: 406eb832055b2494db7c68f26b380464, type: 3}
 --- !u!82 &329173559
 AudioSource:
   m_ObjectHideFlags: 0
@@ -34978,6 +34980,8 @@ GameObject:
   - component: {fileID: 945452235}
   - component: {fileID: 945452237}
   - component: {fileID: 945452236}
+  - component: {fileID: 945452239}
+  - component: {fileID: 945452238}
   m_Layer: 0
   m_Name: Ghost1
   m_TagString: Untagged
@@ -35184,6 +35188,8 @@ GameObject:
   - component: {fileID: 952679703}
   - component: {fileID: 952679705}
   - component: {fileID: 952679704}
+  - component: {fileID: 952679707}
+  - component: {fileID: 952679706}
   m_Layer: 0
   m_Name: Ghost4
   m_TagString: Untagged
@@ -49102,6 +49108,7 @@ MonoBehaviour:
   startScene: StartScene
   gameTimer: {fileID: 2006764028}
   scoreText: {fileID: 280048481}
+  ghostTimer: {fileID: 278133090}
   countdownOverlay: {fileID: 773812987}
   countdownText: {fileID: 1581368037}
 --- !u!114 &1420260354
@@ -55263,6 +55270,11 @@ MonoBehaviour:
   hud: {fileID: 1420260353}
   audioManager: {fileID: 329173558}
   characters: {fileID: 1413212817}
+  ghosts:
+  - {fileID: 945452238}
+  - {fileID: 1786206232}
+  - {fileID: 2114987798}
+  - {fileID: 952679706}
 --- !u!1 &1634043848
 GameObject:
   m_ObjectHideFlags: 0
@@ -59914,6 +59926,8 @@ GameObject:
   - component: {fileID: 1786206229}
   - component: {fileID: 1786206231}
   - component: {fileID: 1786206230}
+  - component: {fileID: 1786206233}
+  - component: {fileID: 1786206232}
   m_Layer: 0
   m_Name: Ghost2
   m_TagString: Untagged
@@ -69154,6 +69168,8 @@ GameObject:
   - component: {fileID: 2114987795}
   - component: {fileID: 2114987797}
   - component: {fileID: 2114987796}
+  - component: {fileID: 2114987799}
+  - component: {fileID: 2114987798}
   m_Layer: 0
   m_Name: Ghost3
   m_TagString: Untagged
@@ -74947,6 +74963,7 @@ MonoBehaviour:
   round: {fileID: 1629571911}
   effectsAudio: {fileID: 882908895}
   wallHitSound: {fileID: 8300000, guid: f9c62dadf997be945818f5de04455509, type: 3}
+  eatGhostSound: {fileID: 8300000, guid: 0eaae0b38e9e0114b86d22cb1ad0919d, type: 3}
   wallImpact: {fileID: 247702415}
 --- !u!50 &1576198050
 Rigidbody2D:
@@ -74982,6 +74999,202 @@ CircleCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1576198042}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.35
+--- !u!114 &945452238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945452234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee0cc9e511901a24fb4e58a0e22e9a6f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostStateController
+  animator: {fileID: 945452236}
+--- !u!58 &945452239
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945452234}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.35
+--- !u!114 &952679706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952679702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee0cc9e511901a24fb4e58a0e22e9a6f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostStateController
+  animator: {fileID: 952679704}
+--- !u!58 &952679707
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952679702}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.35
+--- !u!114 &1786206232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1786206228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee0cc9e511901a24fb4e58a0e22e9a6f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostStateController
+  animator: {fileID: 1786206230}
+--- !u!58 &1786206233
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1786206228}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.35
+--- !u!114 &2114987798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114987794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee0cc9e511901a24fb4e58a0e22e9a6f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GhostStateController
+  animator: {fileID: 2114987796}
+--- !u!58 &2114987799
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114987794}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
