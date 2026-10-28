@@ -23,6 +23,8 @@ public class RoundController : MonoBehaviour
     private bool[] colliderStates;
     private double playStartedAt;
     private double scaredUntil;
+    private bool powerPillSpent;
+    private const double ShotGraceSeconds = 0.15d;
     private bool roundStarted;
 
     private void Awake()
@@ -101,6 +103,7 @@ public class RoundController : MonoBehaviour
         if (IsGameOver) yield break;
 
         scaredUntil = 0d;
+        powerPillSpent = false;
         hud.SetGhostTime(0d);
         player.Respawn();
         foreach (GhostStateController ghost in ghosts) ghost.ResetToSpawn();
@@ -145,6 +148,7 @@ public class RoundController : MonoBehaviour
     public void ActivatePowerPill()
     {
         if (!IsPlaying) return;
+        powerPillSpent = false;
         scaredUntil = Time.timeAsDouble + 10d;
         RefreshGhostStates();
     }
@@ -162,8 +166,11 @@ public class RoundController : MonoBehaviour
 
     public bool TryConsumePowerPill()
     {
-        if (!IsPlaying || GhostSecondsRemaining <= 0d) return false;
-        scaredUntil = 0d;
+        if (!IsPlaying || powerPillSpent || GhostSecondsRemaining <= 0d) return false;
+        powerPillSpent = true;
+        // Keep close contact safe while the new projectile starts updating,
+        // but consume the firing charge immediately so grace cannot fire again.
+        scaredUntil = Time.timeAsDouble + ShotGraceSeconds;
         RefreshGhostStates();
         return true;
     }
@@ -172,6 +179,7 @@ public class RoundController : MonoBehaviour
     {
         if (!IsPlaying || !ghost.TryDefeat()) return false;
         AddScore(300);
+        player.GetComponent<PacStudentInteractions>().PlayGhostDefeatSound();
         RefreshGhostStates();
         return true;
     }

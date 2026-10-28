@@ -64028,6 +64028,8 @@ MonoBehaviour:
   level: {fileID: 453025478}
   projectilePrefab: {fileID: 6902689854369732964, guid: 00cfa69575dfa8d418261118c7ef091e, type: 3}
   fireHint: {fileID: 1783847657}
+  effectsAudio: {fileID: 882908895}
+  fireSound: {fileID: 8300000, guid: f286803f8ca147ab8eec0a52b638139f, type: 3}
 --- !u!1 &1576290216
 GameObject:
   m_ObjectHideFlags: 0

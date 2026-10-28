@@ -10,6 +10,8 @@ public class AlienWeaponController : MonoBehaviour
     [SerializeField] private LevelGenerator level;
     [SerializeField] private EnergyProjectile projectilePrefab;
     [SerializeField] private Text fireHint;
+    [SerializeField] private AudioSource effectsAudio;
+    [SerializeField] private AudioClip fireSound;
 
     private void LateUpdate()
     {
@@ -23,6 +25,7 @@ public class AlienWeaponController : MonoBehaviour
         if (!round.TryConsumePowerPill()) return false;
         EnergyProjectile shot = Instantiate(projectilePrefab, player.transform.position, Quaternion.identity);
         shot.Launch(round, level, player.FacingDirection);
+        effectsAudio.PlayOneShot(fireSound);
         return true;
     }
 }
