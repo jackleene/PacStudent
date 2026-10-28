@@ -55,15 +55,21 @@ public class PacStudentInteractions : MonoBehaviour
         }
         else if (other.TryGetComponent(out GhostStateController ghost))
         {
-            if (round.TryEatGhost(ghost)) effectsAudio.PlayOneShot(eatGhostSound);
-            else if (ghost.State == GhostState.Normal)
-            {
-                if (contactPosition.HasValue)
-                    transform.position = new Vector3(contactPosition.Value.x, contactPosition.Value.y, transform.position.z);
-                effectsAudio.Stop();
-                wallImpact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                round.KillPlayer();
-            }
+            ContactGhost(ghost, contactPosition);
+        }
+    }
+
+    public void ContactGhost(GhostStateController ghost, Vector2? contactPosition = null)
+    {
+        if (!CanInteract || ghost == null) return;
+        if (round.TryEatGhost(ghost)) effectsAudio.PlayOneShot(eatGhostSound);
+        else if (ghost.State == GhostState.Normal)
+        {
+            if (contactPosition.HasValue)
+                transform.position = new Vector3(contactPosition.Value.x, contactPosition.Value.y, transform.position.z);
+            effectsAudio.Stop();
+            wallImpact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            round.KillPlayer();
         }
     }
 
