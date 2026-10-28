@@ -62,7 +62,7 @@ public class PacStudentInteractions : MonoBehaviour
     public void ContactGhost(GhostStateController ghost, Vector2? contactPosition = null)
     {
         if (!CanInteract || ghost == null) return;
-        if (round.TryEatGhost(ghost)) effectsAudio.PlayOneShot(eatGhostSound);
+        if (round.TryEatGhost(ghost)) PlayGhostDefeatSound();
         else if (ghost.State == GhostState.Normal)
         {
             if (contactPosition.HasValue)
@@ -71,6 +71,11 @@ public class PacStudentInteractions : MonoBehaviour
             wallImpact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             round.KillPlayer();
         }
+    }
+
+    public void PlayGhostDefeatSound()
+    {
+        effectsAudio.PlayOneShot(eatGhostSound);
     }
 
     public void HitWall(Collider2D wall)

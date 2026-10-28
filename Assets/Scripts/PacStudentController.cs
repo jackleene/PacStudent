@@ -18,6 +18,7 @@ public class PacStudentController : MonoBehaviour
 
     public float DeathDuration => deathAnimation.length;
     public float MoveSpeed => speed;
+    public Vector2Int FacingDirection => GetDirection(isLerping ? currentInput : animationDirection);
 
     private Key lastInput = Key.None;
     private Key currentInput = Key.None;

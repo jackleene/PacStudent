@@ -6,20 +6,30 @@ public class Collectible : MonoBehaviour
     [SerializeField] private AudioClip pickupSound;
     [SerializeField] private bool powerPill;
     private bool collected;
+    private PowerPillCooldown cooldown;
 
     public bool IsPowerPill => powerPill;
+
+    private void Awake() => cooldown = GetComponent<PowerPillCooldown>();
+
+    internal void ResetPickup() => collected = false;
 
     public bool TryCollect(out int awardedPoints, out AudioClip sound)
     {
         awardedPoints = points;
         sound = pickupSound;
         if (collected || !isActiveAndEnabled) return false;
+        if (cooldown != null && !cooldown.CanCollect) return false;
 
         // Trigger callbacks and movement sweeps can both find the same item.
-        // Disable immediately so each item scores only once before deferred destruction.
+        // Mark immediately so each pickup scores only once, including reusable guns.
         collected = true;
-        gameObject.SetActive(false);
-        Destroy(gameObject);
+        if (cooldown != null) cooldown.BeginCooldown();
+        else
+        {
+            gameObject.SetActive(false);
+            Destroy(gameObject);
+        }
         return true;
     }
 }

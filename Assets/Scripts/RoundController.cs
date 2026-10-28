@@ -17,11 +17,14 @@ public class RoundController : MonoBehaviour
     public bool IsDying { get; private set; }
     public bool IsGameOver { get; private set; }
     public double GhostSecondsRemaining => System.Math.Max(0d, scaredUntil - Time.timeAsDouble);
+    public event System.Action PlayerRespawned;
 
     private Collider2D[] characterColliders;
     private bool[] colliderStates;
     private double playStartedAt;
     private double scaredUntil;
+    private bool powerPillSpent;
+    private const double ShotGraceSeconds = 0.15d;
     private bool roundStarted;
 
     private void Awake()
@@ -100,9 +103,11 @@ public class RoundController : MonoBehaviour
         if (IsGameOver) yield break;
 
         scaredUntil = 0d;
+        powerPillSpent = false;
         hud.SetGhostTime(0d);
         player.Respawn();
         foreach (GhostStateController ghost in ghosts) ghost.ResetToSpawn();
+        PlayerRespawned?.Invoke();
         Physics2D.SyncTransforms();
         for (int i = 0; i < characterColliders.Length; i++)
             if (characterColliders[i] != null) characterColliders[i].enabled = colliderStates[i];
@@ -143,6 +148,7 @@ public class RoundController : MonoBehaviour
     public void ActivatePowerPill()
     {
         if (!IsPlaying) return;
+        powerPillSpent = false;
         scaredUntil = Time.timeAsDouble + 10d;
         RefreshGhostStates();
     }
@@ -154,6 +160,26 @@ public class RoundController : MonoBehaviour
         RefreshGhostStates();
         if (!ghost.TryEat()) return false;
         AddScore(300);
+        RefreshGhostStates();
+        return true;
+    }
+
+    public bool TryConsumePowerPill()
+    {
+        if (!IsPlaying || powerPillSpent || GhostSecondsRemaining <= 0d) return false;
+        powerPillSpent = true;
+        // Keep close contact safe while the new projectile starts updating,
+        // but consume the firing charge immediately so grace cannot fire again.
+        scaredUntil = Time.timeAsDouble + ShotGraceSeconds;
+        RefreshGhostStates();
+        return true;
+    }
+
+    public bool TryHitGhostWithProjectile(GhostStateController ghost)
+    {
+        if (!IsPlaying || !ghost.TryDefeat()) return false;
+        AddScore(300);
+        player.GetComponent<PacStudentInteractions>().PlayGhostDefeatSound();
         RefreshGhostStates();
         return true;
     }

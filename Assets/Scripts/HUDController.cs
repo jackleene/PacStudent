@@ -29,7 +29,7 @@ public class HUDController : MonoBehaviour
         if (remaining == displayedGhostSeconds) return;
         displayedGhostSeconds = remaining;
         ghostTimer.gameObject.SetActive(remaining > 0);
-        ghostTimer.text = remaining.ToString();
+        ghostTimer.text = $"Power Mode {remaining}s";
     }
 
     public void SetScore(int score)

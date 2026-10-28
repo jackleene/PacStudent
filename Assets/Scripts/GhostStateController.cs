@@ -54,6 +54,12 @@ public class GhostStateController : MonoBehaviour
     public bool TryEat()
     {
         if (State != GhostState.Scared && State != GhostState.Recovering) return false;
+        return TryDefeat();
+    }
+
+    public bool TryDefeat()
+    {
+        if (State == GhostState.Dead) return false;
         SetState(GhostState.Dead);
         return true;
     }
