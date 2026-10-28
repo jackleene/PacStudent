@@ -7,6 +7,14 @@ public class GhostController : MonoBehaviour
     [SerializeField] private RoundController round;
     [SerializeField] private PacStudentController player;
     [SerializeField, Range(1, 4)] private int ghostNumber = 1;
+    [SerializeField] private CooperativeGhostNavigation cooperativeNavigation;
+
+    public int GhostNumber => ghostNumber;
+    public bool CanCoordinate => isActiveAndEnabled && ghostState != null
+        && ghostState.State == GhostState.Normal && !leavingSpawn;
+    public Vector2Int PlanningCell => isMoving ? targetCell : currentCell;
+    public Vector2Int Heading => direction;
+    public float DistanceToPlanningCell => isMoving ? 1f - moveProgress : 0f;
 
     private GhostStateController ghostState;
     private GhostPatrolRoute patrolRoute;
@@ -52,6 +60,7 @@ public class GhostController : MonoBehaviour
         direction = Vector2Int.zero;
         isMoving = false;
         leavingSpawn = levelGenerator.IsGhostSpawnArea(currentCell);
+        if (cooperativeNavigation != null) cooperativeNavigation.Invalidate();
     }
 
     private void Update()
@@ -141,6 +150,10 @@ public class GhostController : MonoBehaviour
 
     private Vector2Int ChooseDirection(int count)
     {
+        if (CanCoordinate && cooperativeNavigation != null && cooperativeNavigation.isActiveAndEnabled
+            && cooperativeNavigation.TryChooseDirection(this, choices, count, out Vector2Int coordinated))
+            return coordinated;
+
         bool flee = ghostState.State == GhostState.Scared || ghostState.State == GhostState.Recovering
             || ghostNumber == 1;
         if (!flee && ghostNumber == 4) return patrolRoute.ChooseDirection(currentCell, direction, choices, count);

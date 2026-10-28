@@ -14,6 +14,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject powerPelletPrefab;
     [SerializeField] private GameObject tJunctionPrefab;
     [SerializeField] private GameObject ghostExitWallPrefab;
+    [SerializeField] private RoundController round;
 
     [SerializeField] private Camera mainCamera;
     [SerializeField] private float cameraPadding = 1f;
@@ -228,6 +229,8 @@ public class LevelGenerator : MonoBehaviour
                 instance.transform.localPosition = position;
                 instance.transform.localRotation = Quaternion.Euler(0f, 0f, rotation);
                 instance.transform.localScale = Vector3.one;
+
+                if (instance.TryGetComponent(out PowerPillCooldown cooldown)) cooldown.Initialize(round);
 
                 if (tile == 5 || tile == 6)
                 {

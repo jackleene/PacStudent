@@ -17,6 +17,7 @@ public class RoundController : MonoBehaviour
     public bool IsDying { get; private set; }
     public bool IsGameOver { get; private set; }
     public double GhostSecondsRemaining => System.Math.Max(0d, scaredUntil - Time.timeAsDouble);
+    public event System.Action PlayerRespawned;
 
     private Collider2D[] characterColliders;
     private bool[] colliderStates;
@@ -103,6 +104,7 @@ public class RoundController : MonoBehaviour
         hud.SetGhostTime(0d);
         player.Respawn();
         foreach (GhostStateController ghost in ghosts) ghost.ResetToSpawn();
+        PlayerRespawned?.Invoke();
         Physics2D.SyncTransforms();
         for (int i = 0; i < characterColliders.Length; i++)
             if (characterColliders[i] != null) characterColliders[i].enabled = colliderStates[i];

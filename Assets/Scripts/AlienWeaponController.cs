@@ -15,7 +15,7 @@ public class AlienWeaponController : MonoBehaviour
     {
         // Read the facing after player movement has resolved buffered turns.
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) TryFire();
-        fireHint.gameObject.SetActive(round.IsPlaying && round.GhostSecondsRemaining > 0d);
+        fireHint.gameObject.SetActive(round.IsPlaying);
     }
 
     public bool TryFire()
@@ -23,7 +23,6 @@ public class AlienWeaponController : MonoBehaviour
         if (!round.TryConsumePowerPill()) return false;
         EnergyProjectile shot = Instantiate(projectilePrefab, player.transform.position, Quaternion.identity);
         shot.Launch(round, level, player.FacingDirection);
-        fireHint.gameObject.SetActive(false);
         return true;
     }
 }
