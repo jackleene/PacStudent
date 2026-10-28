@@ -1,0 +1,29 @@
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+// Added only to InnovationScene; the standard level keeps its original controls.
+public class AlienWeaponController : MonoBehaviour
+{
+    [SerializeField] private PacStudentController player;
+    [SerializeField] private RoundController round;
+    [SerializeField] private LevelGenerator level;
+    [SerializeField] private EnergyProjectile projectilePrefab;
+    [SerializeField] private Text fireHint;
+
+    private void LateUpdate()
+    {
+        // Read the facing after player movement has resolved buffered turns.
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) TryFire();
+        fireHint.gameObject.SetActive(round.IsPlaying && round.GhostSecondsRemaining > 0d);
+    }
+
+    public bool TryFire()
+    {
+        if (!round.TryConsumePowerPill()) return false;
+        EnergyProjectile shot = Instantiate(projectilePrefab, player.transform.position, Quaternion.identity);
+        shot.Launch(round, level, player.FacingDirection);
+        fireHint.gameObject.SetActive(false);
+        return true;
+    }
+}

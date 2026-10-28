@@ -158,6 +158,22 @@ public class RoundController : MonoBehaviour
         return true;
     }
 
+    public bool TryConsumePowerPill()
+    {
+        if (!IsPlaying || GhostSecondsRemaining <= 0d) return false;
+        scaredUntil = 0d;
+        RefreshGhostStates();
+        return true;
+    }
+
+    public bool TryHitGhostWithProjectile(GhostStateController ghost)
+    {
+        if (!IsPlaying || !ghost.TryDefeat()) return false;
+        AddScore(300);
+        RefreshGhostStates();
+        return true;
+    }
+
     public void ReviveGhost(GhostStateController ghost)
     {
         if (!IsPlaying) return;
