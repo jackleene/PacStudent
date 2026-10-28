@@ -8,7 +8,7 @@ public class GhostStateController : MonoBehaviour
     [SerializeField] private Animator animator;
 
     public GhostState State { get; private set; }
-    private double deadUntil;
+    public Vector3 SpawnPosition => spawnPosition;
     private Vector3 spawnPosition;
     private GhostController movement;
     private int facing;
@@ -29,7 +29,6 @@ public class GhostStateController : MonoBehaviour
     public void ResetToSpawn()
     {
         transform.position = spawnPosition;
-        deadUntil = 0d;
         State = GhostState.Normal;
         facing = 0;
         PlayAnimation();
@@ -45,20 +44,26 @@ public class GhostStateController : MonoBehaviour
         if (State != GhostState.Dead) PlayAnimation();
     }
 
-    public void ApplyGlobalState(GhostState globalState, double now)
+    public void ApplyGlobalState(GhostState globalState)
     {
-        // Each ghost keeps its own three-second death timer, even if another
-        // power pill resets the global timer or the global timer expires.
-        if (State == GhostState.Dead && now < deadUntil) return;
+        // Global timers cannot revive a ghost still travelling home.
+        if (State == GhostState.Dead) return;
         SetState(globalState);
     }
 
-    public bool TryEat(double now)
+    public bool TryEat()
     {
         if (State != GhostState.Scared && State != GhostState.Recovering) return false;
-        deadUntil = now + 3d;
         SetState(GhostState.Dead);
         return true;
+    }
+
+    public void ReviveAtSpawn(GhostState globalState)
+    {
+        if (State != GhostState.Dead || transform.position != spawnPosition) return;
+        facing = 0;
+        SetState(globalState);
+        if (movement != null) movement.ResetMovement();
     }
 
     private void SetState(GhostState state)

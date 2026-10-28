@@ -152,22 +152,35 @@ public class RoundController : MonoBehaviour
         if (!IsPlaying) return false;
         // Resolve expired timers before evaluating a collision in this frame.
         RefreshGhostStates();
-        if (!ghost.TryEat(Time.timeAsDouble)) return false;
+        if (!ghost.TryEat()) return false;
         AddScore(300);
         RefreshGhostStates();
         return true;
     }
 
+    public void ReviveGhost(GhostStateController ghost)
+    {
+        if (!IsPlaying) return;
+        ghost.ReviveAtSpawn(GetGlobalGhostState());
+        // Keep dead music until the last returning ghost reaches its own spawn.
+        RefreshGhostStates();
+    }
+
+    private GhostState GetGlobalGhostState()
+    {
+        double remaining = GhostSecondsRemaining;
+        return remaining <= 0d ? GhostState.Normal
+            : remaining <= 3d ? GhostState.Recovering : GhostState.Scared;
+    }
+
     private void RefreshGhostStates()
     {
-        double now = Time.timeAsDouble;
         double remaining = GhostSecondsRemaining;
-        GhostState globalState = remaining <= 0d ? GhostState.Normal
-            : remaining <= 3d ? GhostState.Recovering : GhostState.Scared;
+        GhostState globalState = GetGlobalGhostState();
         bool anyDead = false;
         foreach (GhostStateController ghost in ghosts)
         {
-            ghost.ApplyGlobalState(globalState, now);
+            ghost.ApplyGlobalState(globalState);
             anyDead |= ghost.State == GhostState.Dead;
         }
         hud.SetGhostTime(remaining);

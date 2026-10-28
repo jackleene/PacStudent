@@ -56,13 +56,17 @@ public class GhostController : MonoBehaviour
 
     private void Update()
     {
-        // Dead ghosts retain the existing timed recovery until the return-to-spawn stage.
-        if (!round.IsPlaying || ghostState.State == GhostState.Dead) return;
+        if (!round.IsPlaying) return;
         Move(Time.deltaTime);
     }
 
     private void Move(float deltaTime)
     {
+        if (ghostState.State == GhostState.Dead)
+        {
+            ReturnToSpawn(deltaTime);
+            return;
+        }
         float remainingDistance = MoveSpeed * deltaTime;
         while (remainingDistance > 0f)
         {
@@ -83,6 +87,21 @@ public class GhostController : MonoBehaviour
                 if (leavingSpawn && currentCell == spawnExit) leavingSpawn = false;
             }
         }
+    }
+
+    private void ReturnToSpawn(float deltaTime)
+    {
+        float speed = MoveSpeed;
+        float distance = Vector3.Distance(transform.position, ghostState.SpawnPosition);
+        // Dead ghosts take a direct route, ignoring walls and player contacts.
+        transform.position = Vector3.MoveTowards(transform.position, ghostState.SpawnPosition, speed * deltaTime);
+        if (distance > speed * deltaTime) return;
+
+        round.ReviveGhost(ghostState);
+        // Use any time left in this frame to start leaving the house at the new
+        // state's speed, rather than pausing or losing distance on arrival.
+        float remainingTime = deltaTime - distance / speed;
+        if (ghostState.State != GhostState.Dead && remainingTime > 0f) Move(remainingTime);
     }
 
     private bool TryStartMove()
@@ -158,8 +177,7 @@ public class GhostController : MonoBehaviour
             {
                 Vector2 contact = (Vector2)from + displacement.normalized * contactHits[i].distance;
                 transform.position = new Vector3(contact.x, contact.y, transform.position.z);
-                // Keep the interrupted lerp consistent if the current three-second
-                // death timer recovers this ghost before return-to-spawn is added.
+                // Preserve the contact position until death or the round reset.
                 moveProgress = Vector3.Distance(moveStart, transform.position);
                 playerInteractions.ContactGhost(ghostState);
             }
