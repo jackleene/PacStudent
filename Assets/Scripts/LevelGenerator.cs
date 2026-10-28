@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
@@ -13,6 +14,7 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject powerPelletPrefab;
     [SerializeField] private GameObject tJunctionPrefab;
     [SerializeField] private GameObject ghostExitWallPrefab;
+    [SerializeField] private RoundController round;
 
     [SerializeField] private Camera mainCamera;
     [SerializeField] private float cameraPadding = 1f;
@@ -23,6 +25,52 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private float insideWallOffset;
     [SerializeField] private float tJunctionOffset;
     [SerializeField] private float ghostExitWallOffset;
+
+    private readonly Dictionary<Vector2Int, GameObject> pellets = new Dictionary<Vector2Int, GameObject>();
+    private readonly Dictionary<Vector2Int, Collider2D> walls = new Dictionary<Vector2Int, Collider2D>();
+
+    public int RemainingPellets => pellets.Count;
+
+    public bool RemoveCollectedPellet(Collectible item)
+    {
+        Vector2Int cell = Vector2Int.RoundToInt(item.transform.position);
+        // Only generated map pellets count toward completion, never bonus cherries.
+        if (!pellets.TryGetValue(cell, out GameObject pellet) || pellet != item.gameObject) return false;
+        return pellets.Remove(cell);
+    }
+
+    public Bounds LevelBounds
+    {
+        get
+        {
+            float width = levelMap.GetLength(1) * 2;
+            float height = levelMap.GetLength(0) * 2 - 1;
+            return new Bounds(new Vector3((width - 1f) * 0.5f, -(height - 1f) * 0.5f, 0f),
+                new Vector3(width, height, 1f));
+        }
+    }
+
+    public bool HasPellet(Vector2Int cell)
+    {
+        return pellets.TryGetValue(cell, out GameObject pellet) && pellet != null && pellet.activeInHierarchy;
+    }
+
+    public Collider2D GetWall(Vector2Int cell)
+    {
+        walls.TryGetValue(cell, out Collider2D wall);
+        return wall;
+    }
+
+    public bool TryGetTunnelExit(Vector2Int cell, Vector2Int direction, out Vector2Int exit)
+    {
+        exit = cell;
+        int lastColumn = levelMap.GetLength(1) * 2 - 1;
+        if (cell.y != -(levelMap.GetLength(0) - 1)) return false;
+        if (cell.x == 0 && direction == Vector2Int.left) exit.x = lastColumn;
+        else if (cell.x == lastColumn && direction == Vector2Int.right) exit.x = 0;
+        else return false;
+        return true;
+    }
 
     private readonly int[,] levelMap =
     {
@@ -42,6 +90,53 @@ public class LevelGenerator : MonoBehaviour
         {2,2,2,2,2,1,5,3,3,0,4,0,0,0},
         {0,0,0,0,0,0,5,0,0,0,4,0,0,0}
     };
+
+    // Grid coordinates match world X/Y: rows below the origin have negative Y.
+    public bool IsWalkable(Vector2Int cell)
+    {
+        return IsOpen(GetTile(cell));
+    }
+
+    public bool IsGhostWalkable(Vector2Int cell, bool leavingSpawn)
+    {
+        // The tunnel endpoints are walls for ghosts, never teleport destinations.
+        if (cell.y == -14 && (cell.x == 0 || cell.x == 27)) return false;
+        int tile = GetTile(cell);
+        if (tile == 8) return leavingSpawn;
+        if (!IsOpen(tile)) return false;
+        return leavingSpawn || !IsGhostSpawnArea(cell);
+    }
+
+    public bool IsGhostSpawnArea(Vector2Int cell)
+    {
+        // Interior and the two gate rows of this map's central ghost house.
+        return cell.x >= 11 && cell.x <= 16 && cell.y >= -16 && cell.y <= -12;
+    }
+
+    public Vector2Int GetGhostExit(int ghostNumber)
+    {
+        return new Vector2Int(ghostNumber <= 2 ? 13 : 14,
+            ghostNumber == 1 || ghostNumber == 3 ? -11 : -17);
+    }
+
+    private int GetTile(Vector2Int cell)
+    {
+        int width = levelMap.GetLength(1);
+        int height = levelMap.GetLength(0);
+        int fullWidth = width * 2;
+        int fullHeight = height * 2 - 1;
+        int row = -cell.y;
+
+        if (cell.x < 0 || cell.x >= fullWidth || row < 0 || row >= fullHeight)
+        {
+            return -1;
+        }
+
+        // Use the same mirroring as GenerateLevel, including its shared middle row.
+        int column = cell.x < width ? cell.x : fullWidth - 1 - cell.x;
+        row = row < height ? row : fullHeight - 1 - row;
+        return levelMap[row, column];
+    }
 
     private void Start()
     {
@@ -134,6 +229,21 @@ public class LevelGenerator : MonoBehaviour
                 instance.transform.localPosition = position;
                 instance.transform.localRotation = Quaternion.Euler(0f, 0f, rotation);
                 instance.transform.localScale = Vector3.one;
+
+                if (instance.TryGetComponent(out PowerPillCooldown cooldown)) cooldown.Initialize(round);
+
+                if (tile == 5 || tile == 6)
+                {
+                    pellets[Vector2Int.RoundToInt(instance.transform.position)] = instance;
+                }
+                else if (IsAnyStructure(tile))
+                {
+                    // The collision grid is one unit per tile, independent of sprite art.
+                    var wall = instance.AddComponent<BoxCollider2D>();
+                    wall.size = Vector2.one;
+                    wall.isTrigger = true;
+                    walls[Vector2Int.RoundToInt(instance.transform.position)] = wall;
+                }
             }
         }
     }
@@ -430,6 +540,8 @@ public class LevelGenerator : MonoBehaviour
 
     private void ClearGeneratedLevel()
     {
+        pellets.Clear();
+        walls.Clear();
         for (int i = generatedLevel.childCount - 1; i >= 0; i--)
         {
             Destroy(generatedLevel.GetChild(i).gameObject);
